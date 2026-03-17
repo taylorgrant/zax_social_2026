@@ -37,18 +37,18 @@ monthly_performance <- function(sheet_data, month) {
     dplyr::mutate(
       date = as.Date(publish_time, format = "%m/%d/%y %H:%M")
     ) |>
-    mutate(
-      month = floor_date(date, "month")
+    dplyr::mutate(
+      month = lubridate::floor_date(date, "month")
     )
 
   fb_overall <- fb_base |>
-    group_by(month) |>
-    summarise(
+    dplyr::group_by(month) |>
+    dplyr::summarise(
       engagements = sum(reactions_comments_and_shares),
       views = sum(views),
-      posts = n()
+      posts = dplyr::n()
     ) |>
-    mutate(platform = "Facebook")
+    dplyr::mutate(platform = "Facebook")
 
   igp_base <- readr::read_csv(src_igp, show_col_types = FALSE) |>
     janitor::clean_names() |>
@@ -56,115 +56,115 @@ monthly_performance <- function(sheet_data, month) {
       date = as.Date(publish_time, format = "%m/%d/%y %H:%M"),
       boosted = tidyr::replace_na(boosted, 0)
     ) |>
-    mutate(
-      month = floor_date(date, "month"),
+    dplyr::mutate(
+      month = lubridate::floor_date(date, "month"),
       engagements = likes + shares + comments + shares,
     )
 
   igp_overall <- igp_base |>
-    group_by(month) |>
-    summarise(
+    dplyr::group_by(month) |>
+    dplyr::summarise(
       engagements = sum(engagements),
       views = sum(views),
-      posts = n()
+      posts = dplyr::n()
     ) |>
-    mutate(platform = "IG Posts")
+    dplyr::mutate(platform = "IG Posts")
 
   igp_organic <- igp_base |>
-    filter(
+    dplyr::filter(
       account_username == "realzaxbys",
       boosted != 1
     ) |>
-    group_by(month) |>
-    summarise(
+    dplyr::group_by(month) |>
+    dplyr::summarise(
       engagements = sum(engagements),
       views = sum(views),
-      posts = n()
+      posts = dplyr::n()
     ) |>
-    mutate(platform = "IG Posts")
+    dplyr::mutate(platform = "IG Posts")
 
   igs_base <- readr::read_csv(src_igs, show_col_types = FALSE) |>
     janitor::clean_names() |>
     dplyr::mutate(
       date = as.Date(publish_time, format = "%m/%d/%y %H:%M")
     ) |>
-    mutate(
-      month = floor_date(date, "month"),
+    dplyr::mutate(
+      month = lubridate::floor_date(date, "month"),
       engagements = likes + shares + sticker_taps,
-      engagements = replace_na(engagements, 0)
+      engagements = tidyr::replace_na(engagements, 0)
     )
 
   igs_overall <- igs_base |>
-    group_by(month) |>
-    summarise(
+    dplyr::group_by(month) |>
+    dplyr::summarise(
       engagements = sum(engagements),
       views = sum(views),
-      posts = n()
+      posts = dplyr::n()
     ) |>
-    mutate(platform = "IG Stories")
+    dplyr::mutate(platform = "IG Stories")
 
   tt_base <- readr::read_csv(src_tt, show_col_types = FALSE) |>
     janitor::clean_names() |>
     dplyr::mutate(
       date = as.Date(post_time, format = "%m/%d/%y %H:%M"),
-      across(co_posted:boosted, ~ replace_na(., 0))
+      dplyr::across(co_posted:boosted, ~ tidyr::replace_na(., 0))
     ) |>
-    mutate(
-      month = floor_date(date, "month"),
+    dplyr::mutate(
+      month = lubridate::floor_date(date, "month"),
       views = video_views,
       engagements = likes + comments + shares,
     )
 
   tt_overall <- tt_base |>
-    group_by(month) |>
-    summarise(
+    dplyr::group_by(month) |>
+    dplyr::summarise(
       engagements = sum(engagements),
       views = sum(views),
-      posts = n()
+      posts = dplyr::n()
     ) |>
-    mutate(platform = "TikTok")
+    dplyr::mutate(platform = "TikTok")
 
   tt_organic <- tt_base |>
-    filter(
+    dplyr::filter(
       boosted != 1,
       co_posted != 1,
     ) |>
-    group_by(month) |>
-    summarise(
+    dplyr::group_by(month) |>
+    dplyr::summarise(
       engagements = sum(engagements),
       views = sum(views),
-      posts = n()
+      posts = dplyr::n()
     ) |>
-    mutate(platform = "TikTok")
+    dplyr::mutate(platform = "TikTok")
 
   x_base <- readr::read_csv(src_x, show_col_types = FALSE) |>
     janitor::clean_names() |>
     dplyr::mutate(
       date = as.Date(date, format = "%m/%d/%y")
     ) |>
-    mutate(
-      month = floor_date(date, "month"),
+    dplyr::mutate(
+      month = lubridate::floor_date(date, "month"),
       engagements = likes + comments + shares + saves
     )
 
   x_overall <- x_base |>
-    group_by(month) |>
-    summarise(
+    dplyr::group_by(month) |>
+    dplyr::summarise(
       engagements = sum(engagements),
       views = sum(views),
-      posts = n()
+      posts = dplyr::n()
     ) |>
-    mutate(platform = "X")
+    dplyr::mutate(platform = "X")
 
-  month_overall <- bind_rows(
+  month_overall <- dplyr::bind_rows(
     fb_overall,
     igp_overall,
     igs_overall,
     tt_overall,
     x_overall
   ) |>
-    group_by(month) |>
-    summarise(
+    dplyr::group_by(month) |>
+    dplyr::summarise(
       engagements = sum(engagements),
       views = sum(views),
       er = engagements / views,
