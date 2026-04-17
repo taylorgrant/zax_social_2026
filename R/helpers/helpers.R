@@ -83,7 +83,7 @@ build_follower_table <- function(data, sheet_data, monthyear) {
 monthly_followers <- function(sheet_data, monthyear) {
   files <- follower_file_paths(monthyear)
   raw <- read_follower_files(files, sheet_data)
-  out <- build_follower_table(raw, all_sheets, monthyear)
+  out <- build_follower_table(raw, sheet_data, monthyear)
 
   list(
     data = out,
