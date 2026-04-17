@@ -2,10 +2,12 @@
 monthly_zaxbys <- function(monthyear) {
   # packages
   pacman::p_load(tidyverse, janitor, here, glue, googlesheets4, googledrive)
-
   # helper functions
   source(here::here("R", "helpers", "helpers.R"))
   source(here::here("R", "run_plots.R"))
+
+  # ensure proper folder structure
+  setup_project_dirs()
 
   # call font
   base_family <- setup_fonts()

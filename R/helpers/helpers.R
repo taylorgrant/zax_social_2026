@@ -1,3 +1,38 @@
+get_project_structure <- function() {
+  list(
+    data = list(
+      monthly_new = NULL,
+      monthly_processed = NULL
+    ),
+    figures = list(
+      boosted = NULL,
+      organic = NULL,
+      overall = NULL,
+      followers = NULL,
+      buckets = NULL
+    )
+  )
+}
+
+create_dirs_recursive <- function(base_path, structure) {
+  purrr::walk(names(structure), function(name) {
+    path <- fs::path(base_path, name)
+
+    fs::dir_create(path)
+
+    if (is.list(structure[[name]])) {
+      create_dirs_recursive(path, structure[[name]])
+    }
+  })
+}
+
+setup_project_dirs <- function(root = here::here()) {
+  structure <- get_project_structure()
+  create_dirs_recursive(root, structure)
+
+  invisible(TRUE)
+}
+
 get_config <- function() {
   list(
     ga_id = "1dFJWftQk2-4iPeK-Oo6qoglJryKGJxIGL_q-c4qQ5ic",
