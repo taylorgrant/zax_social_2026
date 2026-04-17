@@ -11,10 +11,7 @@ ig_post <- readxl::read_excel(here::here(
 )) |>
   janitor::clean_names() |>
   dplyr::mutate(
-    date = as.Date(lubridate::parse_date_time(
-      publish_time,
-      orders = c("mdy HM", "mdy")
-    )),
+    date = as.Date(publish_time),
     boosted = tidyr::replace_na(boosted, 0)
   )
 
