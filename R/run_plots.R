@@ -1,8 +1,8 @@
 # Function for plotting
-run_plots <- function() {
+run_plots <- function(base_family = "sans") {
   source(here::here("R", "helpers", "plot_helpers.R"))
   # bring in the updated google sheets data
-  ga_id <- "1dFJWftQk2-4iPeK-Oo6qoglJryKGJxIGL_q-c4qQ5ic"
+  ga_id <- get_config()$ga_id
 
   sheet_names <- googlesheets4::sheet_names(ga_id)
   # read in all sheets
@@ -19,23 +19,23 @@ run_plots <- function() {
   # now plot
 
   # Start with Boosted
-  boosted_plot(data = all_sheets, "TikTok")
-  boosted_plot(data = all_sheets, "IG Post")
+  boosted_plot(data = all_sheets, "TikTok", base_family = base_family)
+  boosted_plot(data = all_sheets, "IG Post", base_family = base_family)
 
   # Now Followers
-  follower_plot(data = all_sheets)
+  follower_plot(data = all_sheets, base_family = base_family)
 
   # Organic
-  organic_plot(data = all_sheets, "Facebook")
-  organic_plot(data = all_sheets, "IG Post")
-  organic_plot(data = all_sheets, "IG Stories")
-  organic_plot(data = all_sheets, "TikTok")
-  organic_plot(data = all_sheets, "X")
+  organic_plot(data = all_sheets, "Facebook", base_family = base_family)
+  organic_plot(data = all_sheets, "IG Post", base_family = base_family)
+  organic_plot(data = all_sheets, "IG Stories", base_family = base_family)
+  organic_plot(data = all_sheets, "TikTok", base_family = base_family)
+  organic_plot(data = all_sheets, "X", base_family = base_family)
 
   # Overall
-  overall_plot(data = all_sheets, "Facebook")
-  overall_plot(data = all_sheets, "IG Post")
-  overall_plot(data = all_sheets, "IG Stories")
-  overall_plot(data = all_sheets, "TikTok")
-  overall_plot(data = all_sheets, "X")
+  overall_plot(data = all_sheets, "Facebook", base_family = base_family)
+  overall_plot(data = all_sheets, "IG Post", base_family = base_family)
+  overall_plot(data = all_sheets, "IG Stories", base_family = base_family)
+  overall_plot(data = all_sheets, "TikTok", base_family = base_family)
+  overall_plot(data = all_sheets, "X", base_family = base_family)
 }

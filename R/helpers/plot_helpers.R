@@ -1,27 +1,4 @@
-boosted_plot <- function(data, platform) {
-  # load font
-  # pacman::p_load(showtext)
-  # sysfonts::font_add_google("Barlow", "Barlow")
-  # showtext::showtext_auto()
-  # showtext::showtext_opts(dpi = 300)
-  if (
-    requireNamespace("showtext", quietly = TRUE) &&
-      requireNamespace("sysfonts", quietly = TRUE)
-  ) {
-    sysfonts::font_add_google("Barlow", "Barlow")
-    showtext::showtext_auto()
-    showtext::showtext_opts(dpi = 300)
-
-    base_family <- "Barlow"
-  } else {
-    base_family <- "sans"
-  }
-
-  # source the theme for the plots
-  devtools::source_gist(
-    "https://gist.github.com/taylorgrant/1a486bccbde092d3b333a496e60049d5"
-  )
-
+boosted_plot <- function(data, platform, base_family = "sans") {
   tmpdat <- if (platform == "IG Post") {
     data[[platform]][
       data[[platform]]$platform == "IG Post Boosted",
@@ -170,16 +147,13 @@ boosted_plot <- function(data, platform) {
     height = 5
   )
 
-  # upload to google drive
-  folder_id <- "1AS5XMk9EF89nKSKd-n6lMY1dA8f7MLKk"
-
   googledrive::drive_upload(
     glue::glue(here::here(
       "figures",
       "boosted",
       "{format(last(tmpdat$month), '%b-%Y')}-{platform}-BOOSTED-VIEWS.png"
     )),
-    path = googledrive::as_id(folder_id),
+    path = googledrive::as_id(get_config()$drive_folders$boosted),
     overwrite = TRUE
   )
 
@@ -189,36 +163,13 @@ boosted_plot <- function(data, platform) {
       "boosted",
       "{format(last(tmpdat$month), '%b-%Y')}-{platform}-BOOSTED-ER.png"
     )),
-    path = googledrive::as_id(folder_id),
+    path = googledrive::as_id(get_config()$drive_folders$boosted),
     overwrite = TRUE
   )
 }
 
 
-follower_plot <- function(data) {
-  # load font
-  # pacman::p_load(showtext)
-  # sysfonts::font_add_google("Barlow", "Barlow")
-  # showtext::showtext_auto()
-  # showtext::showtext_opts(dpi = 300)
-  if (
-    requireNamespace("showtext", quietly = TRUE) &&
-      requireNamespace("sysfonts", quietly = TRUE)
-  ) {
-    sysfonts::font_add_google("Barlow", "Barlow")
-    showtext::showtext_auto()
-    showtext::showtext_opts(dpi = 300)
-
-    base_family <- "Barlow"
-  } else {
-    base_family <- "sans"
-  }
-
-  # source the theme for the plots
-  devtools::source_gist(
-    "https://gist.github.com/taylorgrant/1a486bccbde092d3b333a496e60049d5"
-  )
-
+follower_plot <- function(data, base_family = "sans") {
   follower_data <- data$Followers |>
     tidyr::pivot_longer(cols = facebook:x) |>
     mutate(
@@ -305,16 +256,13 @@ follower_plot <- function(data) {
       height = 5
     )
 
-    # push to GDrive
-    folder_id <- "1h3OheIsk-hHxFRmKmGvOM9uWp07GJSCB"
-
     googledrive::drive_upload(
       glue::glue(here::here(
         "figures",
         "followers",
         "{format(last(data_filtered$month), '%b-%Y')}-{platform}-FOLLOWERS.png"
       )),
-      path = googledrive::as_id(folder_id),
+      path = googledrive::as_id(get_config()$drive_folders$followers),
       overwrite = TRUE
     )
   }
@@ -325,30 +273,7 @@ follower_plot <- function(data) {
   make_plot(data_filtered, "X")
 }
 
-organic_plot <- function(data, platform) {
-  # load font
-  # pacman::p_load(showtext)
-  # sysfonts::font_add_google("Barlow", "Barlow")
-  # showtext::showtext_auto()
-  # showtext::showtext_opts(dpi = 300)
-  if (
-    requireNamespace("showtext", quietly = TRUE) &&
-      requireNamespace("sysfonts", quietly = TRUE)
-  ) {
-    sysfonts::font_add_google("Barlow", "Barlow")
-    showtext::showtext_auto()
-    showtext::showtext_opts(dpi = 300)
-
-    base_family <- "Barlow"
-  } else {
-    base_family <- "sans"
-  }
-
-  # source the theme for the plots
-  devtools::source_gist(
-    "https://gist.github.com/taylorgrant/1a486bccbde092d3b333a496e60049d5"
-  )
-
+organic_plot <- function(data, platform, base_family = "sans") {
   # pull in benchmarks
   benchmarks <- readRDS(here::here("data", "bm_data", "benchmarks.rds"))
 
@@ -547,8 +472,6 @@ organic_plot <- function(data, platform) {
     width = 6,
     height = 5
   )
-  # upload to google drive
-  folder_id <- "1ZgmTESuDO8AW6ilaVZgrztmiyI1j665r"
 
   googledrive::drive_upload(
     glue::glue(here::here(
@@ -556,7 +479,7 @@ organic_plot <- function(data, platform) {
       "organic",
       "{format(last(data[[platform]]$month), '%b-%Y')}-{platform}-VIEWS.png"
     )),
-    path = googledrive::as_id(folder_id),
+    path = googledrive::as_id(get_config()$drive_folders$organic),
     overwrite = TRUE
   )
 
@@ -566,35 +489,12 @@ organic_plot <- function(data, platform) {
       "organic",
       "{format(last(data[[platform]]$month), '%b-%Y')}-{platform}-ER.png"
     )),
-    path = googledrive::as_id(folder_id),
+    path = googledrive::as_id(get_config()$drive_folders$organic),
     overwrite = TRUE
   )
 }
 
-overall_plot <- function(data, platform) {
-  # load font
-  # pacman::p_load(showtext)
-  # sysfonts::font_add_google("Barlow", "Barlow")
-  # showtext::showtext_auto()
-  # showtext::showtext_opts(dpi = 300)
-  if (
-    requireNamespace("showtext", quietly = TRUE) &&
-      requireNamespace("sysfonts", quietly = TRUE)
-  ) {
-    sysfonts::font_add_google("Barlow", "Barlow")
-    showtext::showtext_auto()
-    showtext::showtext_opts(dpi = 300)
-
-    base_family <- "Barlow"
-  } else {
-    base_family <- "sans"
-  }
-
-  # source the theme for the plots
-  devtools::source_gist(
-    "https://gist.github.com/taylorgrant/1a486bccbde092d3b333a496e60049d5"
-  )
-
+overall_plot <- function(data, platform, base_family = "sans") {
   tmpdat <- if (platform == "IG Post") {
     data[[platform]][
       data[[platform]]$platform == "IG Post Overall",
@@ -745,16 +645,13 @@ overall_plot <- function(data, platform) {
     height = 5
   )
 
-  # upload to google drive
-  folder_id <- "1a0vqb_5Wj03BamAPC53d65ww-RmH1z3E"
-
   googledrive::drive_upload(
     glue::glue(here::here(
       "figures",
       "overall",
       "{format(last(data_filtered$month), '%b-%Y')}-{platform}-OVERALL-VIEWS.png"
     )),
-    path = googledrive::as_id(folder_id),
+    path = googledrive::as_id(get_config()$drive_folders$overall),
     overwrite = TRUE
   )
 
@@ -764,7 +661,7 @@ overall_plot <- function(data, platform) {
       "overall",
       "{format(last(data_filtered$month), '%b-%Y')}-{platform}-OVERALL-ER.png"
     )),
-    path = googledrive::as_id(folder_id),
+    path = googledrive::as_id(get_config()$drive_folders$overall),
     overwrite = TRUE
   )
 }

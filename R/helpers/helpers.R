@@ -1,69 +1,75 @@
-# Pull in monthly followers from data
-monthly_followers <- function(sheet_data, monthyear) {
+get_config <- function() {
+  list(
+    ga_id = "1dFJWftQk2-4iPeK-Oo6qoglJryKGJxIGL_q-c4qQ5ic",
+    drive_folders = list(
+      boosted = "1AS5XMk9EF89nKSKd-n6lMY1dA8f7MLKk",
+      buckets = "1fCsk4BfyBaNcgIsnYdEtg2P394l9B7NA",
+      followers = "1h3OheIsk-hHxFRmKmGvOM9uWp07GJSCB",
+      organic = "1ZgmTESuDO8AW6ilaVZgrztmiyI1j665r",
+      overall = "1a0vqb_5Wj03BamAPC53d65ww-RmH1z3E"
+    )
+  )
+}
+
+follower_file_paths <- function(monthyear) {
   platforms <- c("fb", "ig", "tiktok", "x")
-
-  current_month <- as.Date(paste0(monthyear, "-01"), format = "%b%y-%d")
-
-  src_fb <- here::here(
+  fb_path <- here::here(
     "data",
     "monthly_new",
     glue::glue("{platforms[1]}_followers_{monthyear}.csv")
   )
-  src_ig <- here::here(
+  ig_path <- here::here(
     "data",
     "monthly_new",
     glue::glue("{platforms[2]}_followers_{monthyear}.csv")
   )
-  src_tt <- here::here(
+  tt_path <- here::here(
     "data",
     "monthly_new",
     glue::glue("{platforms[3]}_followers_{monthyear}.csv")
   )
-  src_x <- here::here(
+  x_path <- here::here(
     "data",
     "monthly_new",
     glue::glue("{platforms[4]}_followers_{monthyear}.csv")
   )
+  files <- c(
+    fb = fb_path,
+    ig = ig_path,
+    tt = tt_path,
+    x = x_path
+  )
+}
 
-  fb <- sum(readr::read_csv(src_fb, skip = 1, show_col_types = FALSE)$Primary) +
+read_follower_files <- function(f, sheet_data) {
+  fb <- sum(
+    readr::read_csv(f["fb"], skip = 1, show_col_types = FALSE)$Primary
+  ) +
     dplyr::last(sheet_data$Followers$facebook)
 
-  ig <- sum(readr::read_csv(src_ig, skip = 1, show_col_types = FALSE)$Primary) +
+  ig <- sum(
+    readr::read_csv(f["ig"], skip = 1, show_col_types = FALSE)$Primary
+  ) +
     dplyr::last(sheet_data$Followers$instagram)
 
-  tt <- dplyr::last(readr::read_csv(src_tt, show_col_types = FALSE)$Followers)
+  tt <- dplyr::last(readr::read_csv(f["tt"], show_col_types = FALSE)$Followers)
 
-  x <- dplyr::last(readr::read_csv(src_x, show_col_types = FALSE)$Followers)
+  x <- dplyr::last(readr::read_csv(f["x"], show_col_types = FALSE)$Followers)
 
-  # move files after processing
-  dest_dir <- here::here("data", "monthly_processed", monthyear)
-  fs::dir_create(dest_dir)
+  c(fb = fb, ig = ig, tt = tt, x = x)
+}
 
-  fs::file_move(
-    src_fb,
-    fs::path(dest_dir, fs::path_file(src_fb))
-  )
-  fs::file_move(
-    src_ig,
-    fs::path(dest_dir, fs::path_file(src_ig))
-  )
-  fs::file_move(
-    src_tt,
-    fs::path(dest_dir, fs::path_file(src_tt))
-  )
-  fs::file_move(
-    src_x,
-    fs::path(dest_dir, fs::path_file(src_x))
-  )
+build_follower_table <- function(data, sheet_data, monthyear) {
+  current_month <- as.Date(paste0(monthyear, "-01"), format = "%b%y-%d")
 
-  rbind(
+  out <- rbind(
     dplyr::select(sheet_data$Followers, month:x),
     tibble::tibble(
       month = current_month,
-      facebook = fb,
-      instagram = ig,
-      tiktok = tt,
-      x = x
+      facebook = data["fb"],
+      instagram = data["ig"],
+      tiktok = data["tt"],
+      x = data["x"]
     )
   ) |>
     dplyr::mutate(
@@ -73,68 +79,80 @@ monthly_followers <- function(sheet_data, monthyear) {
     )
 }
 
+# Pull in monthly followers from data
+monthly_followers <- function(sheet_data, monthyear) {
+  files <- follower_file_paths(monthyear)
+  raw <- read_follower_files(files, sheet_data)
+  out <- build_follower_table(raw, all_sheets, monthyear)
 
-monthly_performance <- function(monthyear) {
+  list(
+    data = out,
+    files = files
+  )
+}
+
+archive_monthly_files <- function(files, monthyear) {
+  dest_dir <- here::here("data", "monthly_processed", monthyear)
+  fs::dir_create(dest_dir)
+  purrr::walk(files, ~ fs::file_move(.x, fs::path(dest_dir, fs::path_file(.x))))
+}
+
+performance_file_paths <- function(monthyear) {
   platforms <- c("fb", "ig", "tiktok", "x")
-
-  current_month <- as.Date(paste0(monthyear, "-01"), format = "%b%y-%d")
-
-  # FILE LOCATIONS ---------------------------------------------------------
-  src_fb <- here::here(
+  fb_path <- here::here(
     "data",
     "monthly_new",
     glue::glue("{platforms[1]}_posts_{monthyear}.csv")
   )
-  src_igp <- here::here(
+  igp_path <- here::here(
     "data",
     "monthly_new",
     glue::glue("{platforms[2]}_posts_{monthyear}.csv")
   )
-  src_igs <- here::here(
+  igs_path <- here::here(
     "data",
     "monthly_new",
     glue::glue("{platforms[2]}_stories_{monthyear}.csv")
   )
-  src_tt <- here::here(
+  tt_path <- here::here(
     "data",
     "monthly_new",
     glue::glue("{platforms[3]}_posts_{monthyear}.csv")
   )
-  src_x <- here::here(
+  x_path <- here::here(
     "data",
     "monthly_new",
     glue::glue("{platforms[4]}_posts_{monthyear}.csv")
   )
+  files <- c(
+    fb = fb_path,
+    igp = igp_path,
+    igs = igs_path,
+    tt = tt_path,
+    x = x_path
+  )
+}
 
-  # OVERALL PERFORMANCE PER MONTH ------------------------------------------
-
-  ## Facebook
-  fb_base <- readr::read_csv(src_fb, show_col_types = FALSE) |>
+read_fb_posts <- function(file) {
+  fb_base <- readr::read_csv(file["fb"], show_col_types = FALSE) |>
     janitor::clean_names() |>
     dplyr::mutate(
-      date = as.Date(parse_date_time(publish_time, orders = c("mdy HM", "mdy")))
+      date = as.Date(lubridate::parse_date_time(
+        publish_time,
+        orders = c("mdy HM", "mdy")
+      ))
     ) |>
     dplyr::mutate(
-      month = lubridate::floor_date(date, "month")
+      month = lubridate::floor_date(date, "month"),
+      engagements = reactions_comments_and_shares
     )
+}
 
-  perf_fb <- fb_base |>
-    dplyr::group_by(month) |>
-    dplyr::summarise(
-      engagements = sum(reactions_comments_and_shares),
-      total_views = sum(views),
-      avg_views = round(mean(views), 0),
-      er = round(engagements / total_views, 5),
-      posts = dplyr::n(),
-    ) |>
-    dplyr::filter(month == current_month) |>
-    dplyr::mutate(platform = "Facebook")
-
-  ## IG Posts
-  igp_base <- readr::read_csv(src_igp, show_col_types = FALSE) |>
+read_ig_posts <- function(file) {
+  igp_base <- readr::read_csv(file["igp"], show_col_types = FALSE) |>
     janitor::clean_names() |>
     dplyr::mutate(
-      date = as.Date(parse_date_time(
+      date = as.Date(lubridate::parse_date_time(
         publish_time,
         orders = c("mdy HM", "mdy")
       )),
@@ -144,99 +162,32 @@ monthly_performance <- function(monthyear) {
       month = lubridate::floor_date(date, "month"),
       engagements = likes + shares + comments + saves,
     )
+}
 
-  # IG Posts - Overall
-  perf_igp <- igp_base |>
-    dplyr::group_by(month) |>
-    dplyr::summarise(
-      engagements = sum(engagements),
-      total_views = sum(views),
-      avg_views = round(mean(views), 0),
-      er = round(engagements / total_views, 5),
-      posts = dplyr::n()
-    ) |>
-    dplyr::filter(month == current_month) |>
-    dplyr::mutate(platform = "IG Post Overall")
-
-  # IG Posts - Organic
-  perf_igp_organic <- igp_base |>
-    dplyr::filter(
-      account_username == "realzaxbys",
-      boosted != 1
-    ) |>
-    dplyr::group_by(month) |>
-    dplyr::summarise(
-      engagements = sum(engagements),
-      total_views = sum(views),
-      avg_views = round(mean(views), 0),
-      er = round(engagements / total_views, 5),
-      posts = dplyr::n()
-    ) |>
-    dplyr::filter(month == current_month) |>
-    dplyr::mutate(platform = "IG Post Organic")
-
-  # IG Posts - Boosted
-  perf_igp_boosted <- igp_base |>
-    dplyr::filter(
-      boosted == 1
-    ) |>
-    dplyr::group_by(month) |>
-    dplyr::summarise(
-      engagements = sum(engagements),
-      total_views = sum(views),
-      avg_views = round(mean(views), 0),
-      er = round(engagements / total_views, 5),
-      posts = dplyr::n()
-    ) |>
-    dplyr::filter(month == current_month) |>
-    dplyr::mutate(platform = "IG Post Boosted")
-
-  # IG Posts - Co-Posted
-  perf_igp_copost <- igp_base |>
-    dplyr::filter(
-      account_username != "realzaxbys",
-      boosted != 1
-    ) |>
-    dplyr::group_by(month) |>
-    dplyr::summarise(
-      engagements = sum(engagements),
-      total_views = sum(views),
-      avg_views = round(mean(views), 0),
-      er = round(engagements / total_views, 5),
-      posts = dplyr::n()
-    ) |>
-    dplyr::filter(month == current_month) |>
-    dplyr::mutate(platform = "IG Post Coposted")
-
-  ## IG Stories
-  igs_base <- readr::read_csv(src_igs, show_col_types = FALSE) |>
+read_ig_stories <- function(file) {
+  igs_base <- readr::read_csv(file["igs"], show_col_types = FALSE) |>
     janitor::clean_names() |>
     dplyr::mutate(
-      date = as.Date(parse_date_time(publish_time, orders = c("mdy HM", "mdy")))
+      date = as.Date(lubridate::parse_date_time(
+        publish_time,
+        orders = c("mdy HM", "mdy")
+      ))
     ) |>
     dplyr::mutate(
       month = lubridate::floor_date(date, "month"),
       engagements = likes + shares + replies + sticker_taps,
       engagements = tidyr::replace_na(engagements, 0)
     )
+}
 
-  perf_igs <- igs_base |>
-    dplyr::group_by(month) |>
-    dplyr::summarise(
-      engagements = sum(engagements),
-      total_views = sum(views),
-      avg_views = round(mean(views), 0),
-      er = round(engagements / total_views, 5),
-      posts = dplyr::n()
-    ) |>
-    dplyr::filter(month == current_month) |>
-    dplyr::mutate(platform = "IG Stories")
-
-  # TikTok
-  tt_base <- readr::read_csv(src_tt, show_col_types = FALSE) |>
+read_tt_posts <- function(file) {
+  tt_base <- readr::read_csv(file["tt"], show_col_types = FALSE) |>
     janitor::clean_names() |>
     dplyr::mutate(
-      date = as.Date(parse_date_time(post_time, orders = c("mdy HM", "mdy"))),
+      date = as.Date(lubridate::parse_date_time(
+        post_time,
+        orders = c("mdy HM", "mdy")
+      )),
       dplyr::across(co_posted:boosted, ~ tidyr::replace_na(., 0))
     ) |>
     dplyr::mutate(
@@ -244,147 +195,145 @@ monthly_performance <- function(monthyear) {
       views = video_views,
       engagements = likes + comments + shares + add_to_favorites,
     )
+}
 
-  # TikTok - Overall
-  perf_tt <- tt_base |>
-    dplyr::group_by(month) |>
-    dplyr::summarise(
-      engagements = sum(engagements),
-      total_views = sum(views),
-      avg_views = round(mean(views), 0),
-      er = round(engagements / total_views, 5),
-      posts = dplyr::n()
-    ) |>
-    dplyr::filter(month == current_month) |>
-    dplyr::mutate(platform = "TikTok Overall")
-
-  # TikTok - Organic
-  perf_tt_organic <- tt_base |>
-    dplyr::filter(
-      boosted != 1,
-      co_posted != 1,
-    ) |>
-    dplyr::group_by(month) |>
-    dplyr::summarise(
-      engagements = sum(engagements),
-      total_views = sum(views),
-      avg_views = round(mean(views), 0),
-      er = round(engagements / total_views, 5),
-      posts = dplyr::n()
-    ) |>
-    dplyr::filter(month == current_month) |>
-    dplyr::mutate(platform = "TikTok Organic")
-
-  # TikTok - Boosted
-  perf_tt_boosted <- tt_base |>
-    dplyr::filter(
-      boosted == 1
-    ) |>
-    dplyr::group_by(month) |>
-    dplyr::summarise(
-      engagements = sum(engagements),
-      total_views = sum(views),
-      avg_views = round(mean(views), 0),
-      er = round(engagements / total_views, 5),
-      posts = dplyr::n()
-    ) |>
-    dplyr::filter(month == current_month) |>
-    dplyr::mutate(platform = "TikTok Boosted")
-
-  # TikTok - Co-Posted
-  perf_tt_copost <- tt_base |>
-    dplyr::filter(
-      co_posted == 1,
-      boosted != 1
-    ) |>
-    dplyr::group_by(month) |>
-    dplyr::summarise(
-      engagements = sum(engagements),
-      total_views = sum(views),
-      avg_views = round(mean(views), 0),
-      er = round(engagements / total_views, 5),
-      posts = dplyr::n()
-    ) |>
-    dplyr::filter(month == current_month) |>
-    dplyr::mutate(platform = "TikTok Coposted")
-
-  # X
-  x_base <- readr::read_csv(src_x, show_col_types = FALSE) |>
+read_x_posts <- function(file) {
+  x_base <- readr::read_csv(file["x"], show_col_types = FALSE) |>
     janitor::clean_names() |>
     dplyr::mutate(
-      date = as.Date(parse_date_time(date, orders = c("mdy HM", "mdy")))
+      date = as.Date(lubridate::parse_date_time(
+        date,
+        orders = c("mdy HM", "mdy")
+      ))
     ) |>
     dplyr::mutate(
       month = lubridate::floor_date(date, "month"),
       engagements = likes + comments + shares + saves
     )
+}
 
-  perf_x <- x_base |>
-    dplyr::group_by(month) |>
+read_monthly_performance_files <- function(monthyear) {
+  files <- performance_file_paths(monthyear)
+
+  list(
+    files = files,
+    base = list(
+      fb = read_fb_posts(files["fb"]),
+      igp = read_ig_posts(files["igp"]),
+      igs = read_ig_stories(files["igs"]),
+      tt = read_tt_posts(files["tt"]),
+      x = read_x_posts(files["x"])
+    )
+  )
+}
+
+summarise_performance <- function(tbl) {
+  tbl |>
     dplyr::summarise(
-      engagements = sum(engagements),
-      total_views = sum(views),
-      avg_views = round(mean(views), 0),
-      er = round(engagements / total_views, 5),
+      engagements = sum(engagements, na.rm = TRUE),
+      total_views = sum(views, na.rm = TRUE),
+      avg_views = round(mean(views, na.rm = TRUE), 0),
+      er = dplyr::if_else(
+        total_views > 0,
+        round(engagements / total_views, 5),
+        NA_real_
+      ),
       posts = dplyr::n()
+    )
+}
+
+summarise_performance_files <- function(rawdata, monthyear) {
+  current_month <- as.Date(paste0(monthyear, "-01"), format = "%b%y-%d")
+  perf_fb <- rawdata$base$fb |>
+    dplyr::group_by(month) |>
+    summarise_performance() |>
+    dplyr::filter(month == current_month) |>
+    dplyr::mutate(platform = "Facebook")
+
+  perf_igp <- rawdata$base$igp |>
+    dplyr::group_by(month) |>
+    summarise_performance() |>
+    dplyr::filter(month == current_month) |>
+    dplyr::mutate(platform = "IG Post Overall")
+
+  perf_igp_organic <- rawdata$base$igp |>
+    dplyr::filter(
+      account_username == "realzaxbys",
+      boosted != 1
     ) |>
+    dplyr::group_by(month) |>
+    summarise_performance() |>
+    dplyr::filter(month == current_month) |>
+    dplyr::mutate(platform = "IG Post Organic")
+
+  perf_igp_boosted <- rawdata$base$igp |>
+    dplyr::filter(
+      boosted == 1
+    ) |>
+    dplyr::group_by(month) |>
+    summarise_performance() |>
+    dplyr::filter(month == current_month) |>
+    dplyr::mutate(platform = "IG Post Boosted")
+
+  perf_igp_copost <- rawdata$base$igp |>
+    dplyr::filter(
+      account_username != "realzaxbys",
+      boosted != 1
+    ) |>
+    dplyr::group_by(month) |>
+    summarise_performance() |>
+    dplyr::filter(month == current_month) |>
+    dplyr::mutate(platform = "IG Post Coposted")
+
+  perf_igs <- rawdata$base$igs |>
+    dplyr::group_by(month) |>
+    summarise_performance() |>
+    dplyr::filter(month == current_month) |>
+    dplyr::mutate(platform = "IG Stories")
+
+  perf_tt <- rawdata$base$tt |>
+    dplyr::group_by(month) |>
+    summarise_performance() |>
+    dplyr::filter(month == current_month) |>
+    dplyr::mutate(platform = "TikTok Overall")
+
+  perf_tt_organic <- rawdata$base$tt |>
+    dplyr::filter(
+      boosted != 1,
+      co_posted != 1,
+    ) |>
+    dplyr::group_by(month) |>
+    summarise_performance() |>
+    dplyr::filter(month == current_month) |>
+    dplyr::mutate(platform = "TikTok Organic")
+
+  perf_tt_boosted <- rawdata$base$tt |>
+    dplyr::filter(
+      boosted == 1
+    ) |>
+    dplyr::group_by(month) |>
+    summarise_performance() |>
+    dplyr::filter(month == current_month) |>
+    dplyr::mutate(platform = "TikTok Boosted")
+
+  # TikTok - Co-Posted
+  perf_tt_copost <- rawdata$base$tt |>
+    dplyr::filter(
+      co_posted == 1,
+      boosted != 1
+    ) |>
+    dplyr::group_by(month) |>
+    summarise_performance() |>
+    dplyr::filter(month == current_month) |>
+    dplyr::mutate(platform = "TikTok Coposted")
+
+  perf_x <- rawdata$base$x |>
+    dplyr::group_by(month) |>
+    summarise_performance() |>
+    dplyr::filter(month == current_month) |>
     dplyr::mutate(platform = "X")
 
-  # Bind Overall for In-Feed view
-  month_overall <- dplyr::bind_rows(
-    perf_fb,
-    perf_igp,
-    perf_igs,
-    perf_tt,
-    perf_x
-  ) |>
-    dplyr::group_by(month) |>
-    dplyr::summarise(
-      engagements = sum(engagements),
-      total_views = sum(total_views),
-      er = engagements / total_views,
-      posts = sum(posts),
-      avg_views = round(total_views / posts, 0)
-    )
-
-  # FILE CLEANUP -----------------------------------------------------------
-  dest_dir <- here::here("data", "monthly_processed", monthyear)
-  fs::file_move(
-    src_fb,
-    fs::path(dest_dir, fs::path_file(src_fb))
-  )
-  fs::file_move(
-    src_igp,
-    fs::path(dest_dir, fs::path_file(src_igp))
-  )
-  fs::file_move(
-    src_igs,
-    fs::path(dest_dir, fs::path_file(src_igs))
-  )
-  fs::file_move(
-    src_tt,
-    fs::path(dest_dir, fs::path_file(src_tt))
-  )
-  fs::file_move(
-    src_x,
-    fs::path(dest_dir, fs::path_file(src_x))
-  )
-
-  # Post-level data
-  bases <- list(
-    fb_base = fb_base,
-    igp_base = igp_base,
-    igs_base = igs_base,
-    tt_base = tt_base,
-    x_base = x_base
-  )
-
-  # bucket posts by thresholds, plot, save to gdrive
-  monthly_buckets(bases)
-
-  # OUTPUT (FB, IGS, X are always organic)
   list(
-    month_overall = month_overall,
     perf_fb = perf_fb,
     perf_igp = perf_igp,
     perf_igp_organic = perf_igp_organic,
@@ -399,10 +348,61 @@ monthly_performance <- function(monthyear) {
   )
 }
 
+build_month_overall <- function(data) {
+  dplyr::bind_rows(
+    data$perf_fb,
+    data$perf_igp,
+    data$perf_igs,
+    data$perf_tt,
+    data$perf_x
+  ) |>
+    dplyr::group_by(month) |>
+    dplyr::summarise(
+      engagements = sum(engagements),
+      total_views = sum(total_views),
+      er = engagements / total_views,
+      posts = sum(posts),
+      avg_views = round(total_views / posts, 0)
+    )
+}
+
+performance_v_benchmark <- function(rawdata) {
+  bases <- list(
+    fb_base = rawdata$base$fb,
+    igp_base = rawdata$base$igp,
+    igs_base = rawdata$base$igs,
+    tt_base = rawdata$base$tt,
+    x_base = rawdata$base$x
+  )
+  monthly_buckets(bases)
+}
+
+monthly_performance <- function(monthyear) {
+  mpf <- read_monthly_performance_files(monthyear)
+  performance <- summarise_performance_files(mpf, monthyear)
+  month_overall <- build_month_overall(performance)
+  performance_v_benchmark(mpf)
+  out <- list(
+    month_overall = month_overall,
+    perf_fb = performance$perf_fb,
+    perf_igp = performance$perf_igp,
+    perf_igp_organic = performance$perf_igp_organic,
+    perf_igp_boosted = performance$perf_igp_boosted,
+    perf_igp_copost = performance$perf_igp_copost,
+    perf_igs = performance$perf_igs,
+    perf_tt = performance$perf_tt,
+    perf_tt_boosted = performance$perf_tt_boosted,
+    perf_tt_copost = performance$perf_tt_copost,
+    perf_tt_organic = performance$perf_tt_organic,
+    perf_x = performance$perf_x,
+    files = mpf$files
+  )
+  return(out)
+}
+
 monthly_buckets <- function(data) {
   # Setup
-  options(gargle_oauth_email = "gspanalytics21@gmail.com")
-  ga_id <- "1dFJWftQk2-4iPeK-Oo6qoglJryKGJxIGL_q-c4qQ5ic"
+  ga_id <- get_config()$ga_id
   benchmarks <- readRDS(here::here("data", "bm_data", "benchmarks.rds"))
 
   # Set up post-level data
@@ -505,10 +505,6 @@ monthly_buckets <- function(data) {
   } else {
     base_family <- "sans"
   }
-  # source the theme for the plots
-  devtools::source_gist(
-    "https://gist.github.com/taylorgrant/1a486bccbde092d3b333a496e60049d5"
-  )
 
   view_bucket_plot <- ggplot(
     data = filter(bucket_full, str_detect(name, "^views")),
@@ -591,7 +587,7 @@ monthly_buckets <- function(data) {
     glue::glue(here::here(
       "figures",
       "buckets",
-      "view_bucket_{format(unique(bucket_full$month), '%b-%Y')}.png"
+      "{format(unique(bucket_full$month), '%b-%Y')}-view_bucket.png"
     )),
     view_bucket_plot,
     width = 6.4,
@@ -602,7 +598,7 @@ monthly_buckets <- function(data) {
     glue::glue(here::here(
       "figures",
       "buckets",
-      "er_bucket_{format(unique(bucket_full$month), '%b-%Y')}.png"
+      "{format(unique(bucket_full$month), '%b-%Y')}-er_bucket.png"
     )),
     er_bucket_plot,
     width = 6.4,
@@ -610,22 +606,23 @@ monthly_buckets <- function(data) {
   )
 
   # upload to google drive
-  folder_id <- "1fCsk4BfyBaNcgIsnYdEtg2P394l9B7NA"
   googledrive::drive_upload(
     glue::glue(here::here(
       "figures",
       "buckets",
-      "view_bucket_{format(unique(bucket_full$month), '%b-%Y')}.png"
+      "{format(unique(bucket_full$month), '%b-%Y')}-view_bucket.png"
     )),
-    path = googledrive::as_id(folder_id)
+    path = googledrive::as_id(get_config()$drive_folders$buckets),
+    overwrite = TRUE
   )
   googledrive::drive_upload(
     glue::glue(here::here(
       "figures",
       "buckets",
-      "er_bucket_{format(unique(bucket_full$month), '%b-%Y')}.png"
+      "{format(unique(bucket_full$month), '%b-%Y')}-er_bucket.png"
     )),
-    path = googledrive::as_id(folder_id)
+    path = googledrive::as_id(get_config()$drive_folders$buckets),
+    overwrite = TRUE
   )
 
   # write thresholds to sheets
@@ -634,4 +631,264 @@ monthly_buckets <- function(data) {
     ss = ga_id,
     sheet = "Platform Thresholds"
   )
+}
+
+# plot theme
+theme_zax <- function(
+  base_family = "Barlow",
+  base_size = 11.5,
+  plot_title_family = base_family,
+  plot_title_size = 18,
+  plot_title_face = "plain",
+  plot_title_margin = 4,
+  subtitle_family = "Barlow",
+  subtitle_size = 12,
+  subtitle_face = "plain",
+  subtitle_margin = 15,
+  strip_text_family = base_family,
+  strip_text_size = 12,
+  strip_text_face = "plain",
+  caption_family = "Barlow",
+  caption_size = 9,
+  caption_face = "italic",
+  caption_margin = 10,
+  axis_title_family = base_family,
+  axis_title_size = 13,
+  axis_title_face = "plain",
+  axis_title_just = "rt",
+  plot_margin = ggplot2::margin(10, 10, 10, 10),
+  panel_spacing = ggplot2::unit(0.5, "lines"),
+  grid_col = "#cccccc",
+  grid = TRUE,
+  axis_col = "#cccccc",
+  axis = FALSE,
+  ticks = FALSE
+) {
+  ret <- ggplot2::theme_minimal(
+    base_family = base_family,
+    base_size = base_size
+  )
+
+  ret <- ret + ggplot2::theme(legend.background = ggplot2::element_blank())
+  ret <- ret + ggplot2::theme(legend.key = ggplot2::element_blank())
+
+  if (inherits(grid, "character") | grid == TRUE) {
+    ret <- ret +
+      ggplot2::theme(
+        panel.grid = ggplot2::element_line(color = grid_col, linewidth = 0.10)
+      )
+    ret <- ret +
+      ggplot2::theme(
+        panel.grid.major = ggplot2::element_line(
+          color = grid_col,
+          linewidth = 0.1
+        )
+      )
+    ret <- ret +
+      ggplot2::theme(
+        panel.grid.minor = ggplot2::element_line(
+          color = grid_col,
+          linewidth = 0.1
+        )
+      )
+
+    if (inherits(grid, "character")) {
+      if (regexpr("X", grid)[1] < 0) {
+        ret <- ret +
+          ggplot2::theme(panel.grid.major.x = ggplot2::element_blank())
+      }
+      if (regexpr("Y", grid)[1] < 0) {
+        ret <- ret +
+          ggplot2::theme(panel.grid.major.y = ggplot2::element_blank())
+      }
+      if (regexpr("x", grid)[1] < 0) {
+        ret <- ret +
+          ggplot2::theme(panel.grid.minor.x = ggplot2::element_blank())
+      }
+      if (regexpr("y", grid)[1] < 0) {
+        ret <- ret +
+          ggplot2::theme(panel.grid.minor.y = ggplot2::element_blank())
+      }
+    }
+  } else {
+    ret <- ret + ggplot2::theme(panel.grid = ggplot2::element_blank())
+  }
+
+  if (inherits(axis, "character") | axis == TRUE) {
+    ret <- ret +
+      ggplot2::theme(
+        axis.line = ggplot2::element_line(color = "#2b2b2b", linewidth = 0.15)
+      )
+    if (inherits(axis, "character")) {
+      axis <- tolower(axis)
+      if (regexpr("x", axis)[1] < 0) {
+        ret <- ret + ggplot2::theme(axis.line.x = ggplot2::element_blank())
+      } else {
+        ret <- ret +
+          ggplot2::theme(
+            axis.line.x = ggplot2::element_line(
+              color = axis_col,
+              linewidth = 0.15
+            )
+          )
+      }
+      if (regexpr("y", axis)[1] < 0) {
+        ret <- ret + ggplot2::theme(axis.line.y = ggplot2::element_blank())
+      } else {
+        ret <- ret +
+          ggplot2::theme(
+            axis.line.y = ggplot2::element_line(
+              color = axis_col,
+              linewidth = 0.15
+            )
+          )
+      }
+    } else {
+      ret <- ret +
+        ggplot2::theme(
+          axis.line.x = ggplot2::element_line(
+            color = axis_col,
+            linewidth = 0.15
+          )
+        )
+      ret <- ret +
+        ggplot2::theme(
+          axis.line.y = ggplot2::element_line(
+            color = axis_col,
+            linewidth = 0.15
+          )
+        )
+    }
+  } else {
+    ret <- ret + ggplot2::theme(axis.line = ggplot2::element_blank())
+  }
+
+  if (!ticks) {
+    ret <- ret + ggplot2::theme(axis.ticks = ggplot2::element_blank())
+    ret <- ret + ggplot2::theme(axis.ticks.x = ggplot2::element_blank())
+    ret <- ret + ggplot2::theme(axis.ticks.y = ggplot2::element_blank())
+  } else {
+    ret <- ret +
+      ggplot2::theme(axis.ticks = ggplot2::element_line(linewidth = 0.15))
+    ret <- ret +
+      ggplot2::theme(axis.ticks.x = ggplot2::element_line(linewidth = 0.15))
+    ret <- ret +
+      ggplot2::theme(axis.ticks.y = ggplot2::element_line(linewidth = 0.15))
+    ret <- ret + ggplot2::theme(axis.ticks.length = grid::unit(5, "pt"))
+  }
+
+  xj <- switch(
+    tolower(substr(axis_title_just, 1, 1)),
+    b = 0,
+    l = 0,
+    m = 0.5,
+    c = 0.5,
+    r = 1,
+    t = 1
+  )
+  yj <- switch(
+    tolower(substr(axis_title_just, 2, 2)),
+    b = 0,
+    l = 0,
+    m = 0.5,
+    c = 0.5,
+    r = 1,
+    t = 1
+  )
+
+  ret <- ret +
+    ggplot2::theme(
+      axis.text.x = ggplot2::element_text(margin = ggplot2::margin(t = 0))
+    )
+  ret <- ret +
+    ggplot2::theme(
+      axis.text.y = ggplot2::element_text(margin = ggplot2::margin(r = 0))
+    )
+  ret <- ret +
+    ggplot2::theme(
+      axis.title = ggplot2::element_text(
+        size = axis_title_size,
+        family = axis_title_family
+      )
+    )
+  ret <- ret +
+    ggplot2::theme(
+      axis.title.x = ggplot2::element_text(
+        hjust = xj,
+        size = axis_title_size,
+        family = axis_title_family,
+        face = axis_title_face
+      )
+    )
+  ret <- ret +
+    ggplot2::theme(
+      axis.title.y = ggplot2::element_text(
+        hjust = yj,
+        size = axis_title_size,
+        family = axis_title_family,
+        face = axis_title_face
+      )
+    )
+  ret <- ret +
+    ggplot2::theme(
+      strip.text = ggplot2::element_text(
+        hjust = 0,
+        size = strip_text_size,
+        face = strip_text_face,
+        family = strip_text_family
+      )
+    )
+  ret <- ret + ggplot2::theme(panel.spacing.x = grid::unit(.5, "lines"))
+  ret <- ret + ggplot2::theme(panel.spacing.y = grid::unit(.5, "lines"))
+  ret <- ret +
+    ggplot2::theme(
+      plot.title = ggplot2::element_text(
+        hjust = 0,
+        size = plot_title_size,
+        margin = ggplot2::margin(b = plot_title_margin),
+        family = plot_title_family,
+        face = plot_title_face
+      )
+    )
+  ret <- ret +
+    ggplot2::theme(
+      plot.subtitle = ggplot2::element_text(
+        hjust = 0,
+        size = subtitle_size,
+        margin = ggplot2::margin(b = subtitle_margin),
+        family = subtitle_family,
+        face = subtitle_face
+      )
+    )
+  ret <- ret +
+    ggplot2::theme(
+      plot.caption = ggplot2::element_text(
+        hjust = 1,
+        size = caption_size,
+        margin = ggplot2::margin(t = caption_margin),
+        family = caption_family,
+        face = caption_face
+      )
+    )
+  ret <- ret + ggplot2::theme(plot.margin = plot_margin)
+
+  ret <- ret + ggplot2::theme(panel.spacing = panel_spacing)
+
+  ret
+}
+
+# fonts
+setup_fonts <- function() {
+  if (
+    requireNamespace("showtext", quietly = TRUE) &&
+      requireNamespace("sysfonts", quietly = TRUE)
+  ) {
+    sysfonts::font_add_google("Barlow", "Barlow")
+    showtext::showtext_auto()
+    showtext::showtext_opts(dpi = 300)
+
+    return("Barlow")
+  }
+
+  return("sans")
 }

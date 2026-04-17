@@ -11,7 +11,10 @@ ig_post <- readxl::read_excel(here::here(
 )) |>
   janitor::clean_names() |>
   dplyr::mutate(
-    date = as.Date(publish_time, format = "%m/%d/%y %H:%M"),
+    date = as.Date(lubridate::parse_date_time(
+      publish_time,
+      orders = c("mdy HM", "mdy")
+    )),
     boosted = tidyr::replace_na(boosted, 0)
   )
 
@@ -22,7 +25,10 @@ ig_stories <- readr::read_csv(here(
 )) |>
   janitor::clean_names() |>
   dplyr::mutate(
-    date = as.Date(publish_time, format = "%m/%d/%y %H:%M")
+    date = as.Date(lubridate::parse_date_time(
+      publish_time,
+      orders = c("mdy HM", "mdy")
+    ))
   )
 
 tiktok <- readr::read_csv(here(
@@ -32,7 +38,10 @@ tiktok <- readr::read_csv(here(
 )) |>
   janitor::clean_names() |>
   dplyr::mutate(
-    date = as.Date(post_time, format = "%m/%d/%y %H:%M"),
+    date = as.Date(lubridate::parse_date_time(
+      post_time,
+      orders = c("mdy HM", "mdy")
+    )),
     across(co_posted:boosted, ~ tidyr::replace_na(., 0))
   )
 
@@ -43,7 +52,10 @@ facebook <- readr::read_csv(here(
 )) |>
   janitor::clean_names() |>
   dplyr::mutate(
-    date = as.Date(publish_time, format = "%m/%d/%y %H:%M")
+    date = as.Date(lubridate::parse_date_time(
+      publish_time,
+      orders = c("mdy HM", "mdy")
+    ))
   )
 
 twitter <- readr::read_csv(here(
@@ -53,7 +65,10 @@ twitter <- readr::read_csv(here(
 )) |>
   janitor::clean_names() |>
   dplyr::mutate(
-    date = as.Date(date, format = "%m/%d/%y")
+    date = as.Date(lubridate::parse_date_time(
+      date,
+      orders = c("mdy HM", "mdy")
+    ))
   )
 
 # BENCHMARKS -------------------------------------------------------------
@@ -147,7 +162,7 @@ thresh_tw <- twitter |>
   dplyr::summarise(dplyr::across(c(views, er), tibble::lst(!!!p_funs))) |>
   dplyr::mutate(platform = "X")
 
-bm_dec <- dplyr::bind_rows(
+bm_2025 <- dplyr::bind_rows(
   thresh_fb,
   thresh_ig_post,
   thresh_ig_story,
@@ -156,6 +171,6 @@ bm_dec <- dplyr::bind_rows(
 )
 
 saveRDS(
-  list(bm_nov = bm_nov, bm_dec = bm_dec),
+  bm_2025,
   here("data", "bm_data", "benchmarks.rds")
 )
