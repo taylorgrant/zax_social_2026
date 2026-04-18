@@ -1,11 +1,5 @@
 # Monthly performance and Followers by platform #
 monthly_zaxbys <- function(monthyear) {
-  # packages
-  pacman::p_load(tidyverse, janitor, here, glue, googlesheets4, googledrive)
-  # helper functions
-  source(here::here("R", "helpers", "helpers.R"))
-  source(here::here("R", "run_plots.R"))
-
   # ensure proper folder structure
   setup_project_dirs()
 
@@ -16,17 +10,7 @@ monthly_zaxbys <- function(monthyear) {
   options(gargle_oauth_email = "gspanalytics21@gmail.com")
   ga_id <- get_config()$ga_id
 
-  sheet_names <- googlesheets4::sheet_names(ga_id)
-  # read in all sheets
-  all_sheets <- purrr::map(
-    sheet_names,
-    ~ googlesheets4::read_sheet(ss = ga_id, sheet = .x) |>
-      janitor::clean_names() |>
-      dplyr::mutate(
-        dplyr::across(dplyr::any_of("month"), as.Date)
-      )
-  )
-  names(all_sheets) <- sheet_names
+  all_sheets <- read_all_sheets(ga_id)
 
   # monthly followers per platform
   followers <- monthly_followers(sheet_data = all_sheets, monthyear)
@@ -49,55 +33,7 @@ monthly_zaxbys <- function(monthyear) {
     )
 
   # WRITE DATA TO SHEETS  --------------------------------------------------
-  googlesheets4::sheet_write(overall, ss = ga_id, sheet = "Overall")
-
-  # Followers
-  googlesheets4::sheet_write(followers$data, ss = ga_id, sheet = "Followers")
-
-  # Facebook
-  googlesheets4::sheet_append(
-    performance$perf_fb,
-    ss = ga_id,
-    sheet = "Facebook"
-  )
-  # IG Post
-  googlesheets4::sheet_append(
-    rbind(
-      performance$perf_igp,
-      performance$perf_igp_organic,
-      performance$perf_igp_boosted,
-      performance$perf_igp_copost
-    ),
-    ss = ga_id,
-    sheet = "IG Post"
-  )
-
-  # IG Stories
-  googlesheets4::sheet_append(
-    performance$perf_igs,
-    ss = ga_id,
-    sheet = "IG Stories"
-  )
-
-  # TikTok
-  googlesheets4::sheet_append(
-    rbind(
-      performance$perf_tt,
-      performance$perf_tt_organic,
-      performance$perf_tt_boosted,
-      performance$perf_tt_copost
-    ),
-    ss = ga_id,
-    sheet = "TikTok"
-  )
-
-  # X
-  googlesheets4::sheet_append(
-    performance$perf_x,
-    ss = ga_id,
-    sheet = "X"
-  )
-
+  write_monthly_outputs(ga_id, followers, overall, performance)
   # now that everything has run and pushed to sheets, pull it back and plot monthly
   run_plots(base_family = base_family)
   archive_monthly_files(c(followers$files, performance$files), monthyear)
