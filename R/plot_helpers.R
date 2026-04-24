@@ -416,7 +416,7 @@ boosted_plot <- function(data, platform, base_family = "sans") {
 follower_plot <- function(data, base_family = "sans") {
   follower_data <- data$Followers |>
     tidyr::pivot_longer(cols = facebook:x) |>
-    mutate(
+    dplyr::mutate(
       name = case_when(
         name == "facebook" ~ "Facebook",
         name == "instagram" ~ "Instagram",
@@ -594,7 +594,7 @@ organic_plot <- function(data, platform, base_family = "sans") {
       color = "black",
       angle = 0
     ) +
-    ggplot2::scale_x_datetime(date_breaks = "months", date_labels = "%b %y") +
+    ggplot2::scale_x_date(date_labels = "%b %y") +
     ggplot2::scale_y_continuous(
       labels = scales::comma,
       expand = ggplot2::expansion(mult = c(0, 0.2))
@@ -666,7 +666,7 @@ organic_plot <- function(data, platform, base_family = "sans") {
       color = "black",
       angle = 0
     ) +
-    ggplot2::scale_x_datetime(date_breaks = "months", date_labels = "%b %y") +
+    ggplot2::scale_x_date(date_labels = "%b %y") +
     ggplot2::scale_y_continuous(
       labels = scales::percent,
       expand = ggplot2::expansion(mult = c(0, 0.2))

@@ -98,7 +98,7 @@ thresh_ig_post <- ig_post |>
   dplyr::filter(
     account_username == "realzaxbys",
     date >= "2025-06-01",
-    date < "2025-12-01",
+    date <= "2025-12-31",
     boosted != 1
   ) |>
   dplyr::mutate(
@@ -113,7 +113,7 @@ thresh_ig_story <- ig_stories |>
   dplyr::filter(
     account_username == "realzaxbys",
     date >= "2025-06-01",
-    date < "2025-12-01",
+    date <= "2025-12-31",
   ) |>
   dplyr::mutate(
     engagements = likes + shares + replies + sticker_taps,
@@ -127,7 +127,7 @@ thresh_tt <- tiktok |>
     boosted != 1,
     co_posted != 1,
     date >= "2025-06-01",
-    date < "2025-12-01"
+    date <= "2025-12-31",
   ) |>
   dplyr::mutate(
     views = video_views,
@@ -140,7 +140,7 @@ thresh_tt <- tiktok |>
 thresh_fb <- facebook |>
   dplyr::filter(
     date >= "2025-06-01",
-    date < "2025-12-01"
+    date <= "2025-12-31",
   ) |>
   dplyr::mutate(
     er = reactions_comments_and_shares / views
@@ -151,7 +151,7 @@ thresh_fb <- facebook |>
 thresh_tw <- twitter |>
   dplyr::filter(
     date >= "2025-06-01",
-    date < "2025-12-01"
+    date <= "2025-12-31",
   ) |>
   dplyr::mutate(
     er = (likes + comments + shares + saves) / views
