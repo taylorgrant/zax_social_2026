@@ -202,29 +202,6 @@ monthly_performance <- function(monthyear) {
   return(out)
 }
 
-monthly_performance <- function(monthyear) {
-  mpf <- read_monthly_performance_files(monthyear)
-  performance <- summarise_performance_files(mpf, monthyear)
-  month_overall <- build_month_overall(performance)
-  performance_v_benchmark(mpf)
-  out <- list(
-    month_overall = month_overall,
-    perf_fb = performance$perf_fb,
-    perf_igp = performance$perf_igp,
-    perf_igp_organic = performance$perf_igp_organic,
-    perf_igp_boosted = performance$perf_igp_boosted,
-    perf_igp_copost = performance$perf_igp_copost,
-    perf_igs = performance$perf_igs,
-    perf_tt = performance$perf_tt,
-    perf_tt_boosted = performance$perf_tt_boosted,
-    perf_tt_copost = performance$perf_tt_copost,
-    perf_tt_organic = performance$perf_tt_organic,
-    perf_x = performance$perf_x,
-    files = mpf$files
-  )
-  return(out)
-}
-
 monthly_buckets <- function(data) {
   # Setup
   ga_id <- get_config()$ga_id
@@ -251,6 +228,10 @@ monthly_buckets <- function(data) {
     dplyr::mutate(er = engagements / views, platform = "IG Stories")
 
   tt <- data$tt_base |>
+    dplyr::filter(
+      boosted != 1,
+      co_posted != 1
+    ) |>
     dplyr::select(month, engagements, views) |>
     dplyr::mutate(er = engagements / views, platform = "TikTok")
 
@@ -335,7 +316,8 @@ monthly_buckets <- function(data) {
     coord_flip() +
     geom_text(
       position = position_stack(vjust = 0.5, reverse = TRUE),
-      color = "white"
+      color = "white",
+      family = base_family
     ) +
     scale_fill_manual(
       values = c("#b2182b", "#e97451", "#67a9cf", "#2166ac"),
@@ -373,7 +355,8 @@ monthly_buckets <- function(data) {
     coord_flip() +
     geom_text(
       position = position_stack(vjust = 0.5, reverse = TRUE),
-      color = "white"
+      color = "white",
+      family = base_family
     ) +
     scale_fill_manual(
       values = c("#b2182b", "#e97451", "#67a9cf", "#2166ac"),
