@@ -87,11 +87,11 @@ robust_quantile <- function(x, prob, trim = 0.97) {
 
 # working off of thresholds: 40, 65, 95
 p <- c(.4, .5, .65, .95)
-p_funs <- map(
+p_funs <- purrr::map(
   p,
   ~ function(x) robust_quantile(x, prob = .x, trim = 0.97)
 ) |>
-  set_names(paste0("p_", p * 100))
+  purrr::set_names(paste0("p_", p * 100))
 
 # IG Post Benchmarks
 thresh_ig_post <- ig_post |>
