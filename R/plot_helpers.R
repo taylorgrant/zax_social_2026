@@ -7,7 +7,7 @@ theme_zax <- function(
   plot_title_face = "plain",
   plot_title_margin = 4,
   subtitle_family = "Barlow",
-  subtitle_size = 12,
+  subtitle_size = 14,
   subtitle_face = "plain",
   subtitle_margin = 15,
   strip_text_family = base_family,
