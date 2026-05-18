@@ -71,7 +71,7 @@ twitter <- readr::read_csv(here(
 # BENCHMARKS -------------------------------------------------------------
 
 # setting up quantiles (log, trim outliers, and quantile)
-robust_quantile <- function(x, prob, trim = 0.97) {
+robust_quantile <- function(x, prob, trim = 0.95) {
   x <- x[!is.na(x)]
 
   if (length(x) == 0) {
@@ -89,7 +89,7 @@ robust_quantile <- function(x, prob, trim = 0.97) {
 p <- c(.4, .5, .65, .95)
 p_funs <- purrr::map(
   p,
-  ~ function(x) robust_quantile(x, prob = .x, trim = 0.97)
+  ~ function(x) robust_quantile(x, prob = .x, trim = 0.95)
 ) |>
   purrr::set_names(paste0("p_", p * 100))
 
