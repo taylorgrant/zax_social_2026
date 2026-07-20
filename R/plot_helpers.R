@@ -415,20 +415,21 @@ boosted_plot <- function(data, platform, base_family = "sans") {
 
 follower_plot <- function(data, base_family = "sans") {
   follower_data <- data$Followers |>
-    tidyr::pivot_longer(cols = facebook:x) |>
+    tidyr::pivot_longer(cols = facebook:youtube) |>
     dplyr::mutate(
       name = case_when(
         name == "facebook" ~ "Facebook",
         name == "instagram" ~ "Instagram",
         name == "tiktok" ~ "TikTok",
-        name == "x" ~ "X"
+        name == "x" ~ "X",
+        name == "youtube" ~ "YouTube"
       )
     )
 
   # filter down the number of months in each plot
   max_month <- max(follower_data$month, na.rm = TRUE)
   data_filtered <- follower_data |>
-    dplyr::filter(month >= (max_month %m-% months(12)))
+    dplyr::filter(month >= (max_month %m-% months(11)))
 
   make_plot <- function(data, platform) {
     # function to format a number
@@ -436,7 +437,7 @@ follower_plot <- function(data, base_family = "sans") {
       dplyr::case_when(
         abs(x) >= 1e9 ~ paste0(round(x / 1e9, 1), "B"), # Billions
         abs(x) >= 1e6 ~ paste0(round(x / 1e6, 2), "M"), # Millions
-        abs(x) >= 1e3 ~ paste0(round(x / 1e3, 2), "k"), # Thousands
+        abs(x) >= 1e3 ~ paste0(round(x / 1e3, 1), "k"), # Thousands
         TRUE ~ as.character(x) # No truncation
       )
     }
@@ -451,7 +452,7 @@ follower_plot <- function(data, base_family = "sans") {
         vjust = -.2,
         hjust = .5,
         na.rm = TRUE,
-        size = 4,
+        size = 3,
         family = base_family,
         color = "black",
         angle = 0
@@ -515,6 +516,7 @@ follower_plot <- function(data, base_family = "sans") {
   make_plot(data_filtered, "Instagram")
   make_plot(data_filtered, "TikTok")
   make_plot(data_filtered, "X")
+  make_plot(data_filtered, "YouTube")
 }
 
 organic_plot <- function(data, platform, base_family = "sans") {
