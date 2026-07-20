@@ -256,7 +256,7 @@ boosted_plot <- function(data, platform, base_family = "sans") {
   # Setting up a filter so that only 13 months are kept in plots
   max_month <- max(tmpdat$month, na.rm = TRUE)
   data_filtered <- tmpdat |>
-    dplyr::filter(month >= (max_month %m-% months(12)))
+    dplyr::filter(month >= (max_month %m-% months(11)))
 
   # function to format a number
   format_number <- function(x) {
@@ -549,7 +549,7 @@ organic_plot <- function(data, platform, base_family = "sans") {
   # filter down the number of months in each plot
   max_month <- max(tmpdat$month, na.rm = TRUE)
   data_filtered <- tmpdat |>
-    dplyr::filter(month >= (max_month %m-% months(12)))
+    dplyr::filter(month >= (max_month %m-% months(11)))
 
   # plot 1 - average views per post
   i_label <- paste0(
@@ -766,7 +766,7 @@ overall_plot <- function(data, platform, base_family = "sans") {
   # filter down the number of months in each plot
   max_month <- max(tmpdat$month, na.rm = TRUE)
   data_filtered <- tmpdat |>
-    dplyr::filter(month >= (max_month %m-% months(12)))
+    dplyr::filter(month >= (max_month %m-% months(11)))
 
   # avg views plot
   p1 <- ggplot2::ggplot(data_filtered, ggplot2::aes(x = month, y = avg_views)) +
