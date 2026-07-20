@@ -100,6 +100,21 @@ read_x_posts <- function(file) {
     )
 }
 
+read_yt_shorts <- function(file) {
+  yt_base <- readr::read_csv(file["yt"], show_col_types = FALSE) |>
+    janitor::clean_names() |>
+    dplyr::mutate(
+      date = as.Date(lubridate::parse_date_time(
+        video_publish_time,
+        orders = c("dmy HM", "dmy")
+      ))
+    ) |>
+    dplyr::mutate(
+      month = lubridate::floor_date(date, "month"),
+      engagements = likes + dislikes + shares + comments_added
+    )
+}
+
 read_monthly_performance_files <- function(monthyear) {
   files <- performance_file_paths(monthyear)
 
@@ -110,7 +125,8 @@ read_monthly_performance_files <- function(monthyear) {
       igp = read_ig_posts(files["igp"]),
       igs = read_ig_stories(files["igs"]),
       tt = read_tt_posts(files["tt"]),
-      x = read_x_posts(files["x"])
+      x = read_x_posts(files["x"]),
+      yt = read_yt_shorts(files["yt"])
     )
   )
 }

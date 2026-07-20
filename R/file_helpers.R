@@ -76,7 +76,7 @@ archive_monthly_files <- function(files, monthyear) {
 }
 
 performance_file_paths <- function(monthyear) {
-  platforms <- c("fb", "ig", "tiktok", "x")
+  platforms <- c("fb", "ig", "tiktok", "x", "youtube")
   fb_path <- here::here(
     "data",
     "monthly_new",
@@ -102,11 +102,17 @@ performance_file_paths <- function(monthyear) {
     "monthly_new",
     glue::glue("{platforms[4]}_posts_{monthyear}.csv")
   )
+  yt_path <- here::here(
+    "data",
+    "monthly_new",
+    glue::glue("{platforms[5]}_shorts_{monthyear}.csv")
+  )
   files <- c(
     fb = fb_path,
     igp = igp_path,
     igs = igs_path,
     tt = tt_path,
-    x = x_path
+    x = x_path,
+    yt = yt_path
   )
 }

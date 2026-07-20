@@ -139,6 +139,12 @@ summarise_performance_files <- function(rawdata, monthyear) {
     dplyr::filter(month == current_month) |>
     dplyr::mutate(platform = "X")
 
+  perf_yt <- rawdata$base$yt |>
+    dplyr::group_by(month) |>
+    summarise_performance() |>
+    dplyr::filter(month == current_month) |>
+    dplyr::mutate(platform = "YouTube Shorts")
+
   list(
     perf_fb = perf_fb,
     perf_igp = perf_igp,
@@ -150,7 +156,8 @@ summarise_performance_files <- function(rawdata, monthyear) {
     perf_tt_organic = perf_tt_organic,
     perf_tt_boosted = perf_tt_boosted,
     perf_tt_copost = perf_tt_copost,
-    perf_x = perf_x
+    perf_x = perf_x,
+    perf_yt = perf_yt
   )
 }
 
@@ -160,7 +167,8 @@ build_month_overall <- function(data) {
     data$perf_igp,
     data$perf_igs,
     data$perf_tt,
-    data$perf_x
+    data$perf_x,
+    data$perf_yt
   ) |>
     dplyr::group_by(month) |>
     dplyr::summarise(
@@ -172,6 +180,7 @@ build_month_overall <- function(data) {
     )
 }
 
+# will eventually need to update with YT Shorts when we have benchmarks
 performance_v_benchmark <- function(rawdata) {
   bases <- list(
     fb_base = rawdata$base$fb,
@@ -201,6 +210,7 @@ monthly_performance <- function(monthyear) {
     perf_tt_copost = performance$perf_tt_copost,
     perf_tt_organic = performance$perf_tt_organic,
     perf_x = performance$perf_x,
+    perf_yt = performance$perf_yt,
     files = mpf$files
   )
   return(out)
