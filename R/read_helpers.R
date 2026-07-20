@@ -13,7 +13,12 @@ read_follower_files <- function(f, sheet_data) {
 
   x <- dplyr::last(readr::read_csv(f["x"], show_col_types = FALSE)$Followers)
 
-  c(fb = fb, ig = ig, tt = tt, x = x)
+  yt <- sum(
+    readr::read_csv(f["yt"], show_col_types = FALSE)$Subscribers
+  ) +
+    dplyr::last(sheet_data$Followers$youtube)
+
+  c(fb = fb, ig = ig, tt = tt, x = x, yt = yt)
 }
 
 read_fb_posts <- function(file) {

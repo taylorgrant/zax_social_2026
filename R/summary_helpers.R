@@ -2,17 +2,21 @@ build_follower_table <- function(data, sheet_data, monthyear) {
   current_month <- as.Date(paste0(monthyear, "-01"), format = "%b%y-%d")
 
   out <- rbind(
-    dplyr::select(sheet_data$Followers, month:x),
+    dplyr::select(sheet_data$Followers, month:youtube),
     tibble::tibble(
       month = current_month,
       facebook = data["fb"],
       instagram = data["ig"],
       tiktok = data["tt"],
-      x = data["x"]
+      x = data["x"],
+      youtube = data["yt"]
     )
   ) |>
     dplyr::mutate(
-      total = facebook + instagram + tiktok + x,
+      total = rowSums(
+        pick(facebook, instagram, tiktok, x, youtube),
+        na.rm = TRUE
+      ),
       diff_total = total - dplyr::lag(total),
       mom_total = round((total - dplyr::lag(total)) / dplyr::lag(total), 5)
     )

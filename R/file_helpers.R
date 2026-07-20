@@ -34,7 +34,7 @@ setup_project_dirs <- function(root = here::here()) {
 }
 
 follower_file_paths <- function(monthyear) {
-  platforms <- c("fb", "ig", "tiktok", "x")
+  platforms <- c("fb", "ig", "tiktok", "x", "youtube")
   fb_path <- here::here(
     "data",
     "monthly_new",
@@ -55,11 +55,17 @@ follower_file_paths <- function(monthyear) {
     "monthly_new",
     glue::glue("{platforms[4]}_followers_{monthyear}.csv")
   )
+  yt_path <- here::here(
+    "data",
+    "monthly_new",
+    glue::glue("{platforms[5]}_followers_{monthyear}.csv")
+  )
   files <- c(
     fb = fb_path,
     ig = ig_path,
     tt = tt_path,
-    x = x_path
+    x = x_path,
+    yt = yt_path
   )
 }
 

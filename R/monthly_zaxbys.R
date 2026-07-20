@@ -10,6 +10,7 @@ monthly_zaxbys <- function(monthyear) {
   options(gargle_oauth_email = "gspanalytics21@gmail.com")
   ga_id <- get_config()$ga_id
 
+  # read in previous month summaries from google sheets
   all_sheets <- read_all_sheets(ga_id)
 
   # monthly followers per platform
