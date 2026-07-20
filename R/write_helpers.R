@@ -37,4 +37,10 @@ write_monthly_outputs <- function(ga_id, followers, overall, performance) {
   )
 
   googlesheets4::sheet_append(performance$perf_x, ss = ga_id, sheet = "X")
+
+  googlesheets4::sheet_append(
+    performance$perf_yt,
+    ss = ga_id,
+    sheet = "YT Shorts"
+  )
 }
